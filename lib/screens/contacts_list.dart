@@ -6,37 +6,30 @@ import 'package:bytebank_app/screens/transaction_form.dart';
 import 'package:flutter/material.dart';
 
 class ContactsList extends StatefulWidget {
+  final ContactDao contactDao;
+
+  ContactsList({required this.contactDao});
+
   @override
   _ContactsListState createState() => _ContactsListState();
 }
 
 class _ContactsListState extends State<ContactsList> {
-  final ContactDao _dao = ContactDao();
-
-  late Future<List<Contact>> contactsList;
-
-  void showContacts() async {
-    var auxList = await _dao.findAll();
-    print('Lista de contatos: $auxList');
-  }
-
   @override
   Widget build(BuildContext context) {
-    showContacts();
     return Scaffold(
       appBar: AppBar(
         title: Text('Transfer'),
       ),
       body: FutureBuilder<List<Contact>>(
         initialData: [],
-        future: _dao.findAll(),
+        future: widget.contactDao.findAll(),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.none:
               break;
             case ConnectionState.waiting:
               return Progress();
-              break;
             case ConnectionState.active:
               break;
             case ConnectionState.done:
@@ -44,7 +37,7 @@ class _ContactsListState extends State<ContactsList> {
               return ListView.builder(
                 itemBuilder: (context, index) {
                   final Contact contact = contacts![index];
-                  return _ContactItem(
+                  return ContactItem(
                     contact,
                     onClick: () {
                       Navigator.of(context)
@@ -63,9 +56,8 @@ class _ContactsListState extends State<ContactsList> {
                 },
                 itemCount: contacts!.length,
               );
-              break;
           }
-          return Text('Unknown error');
+          return const Text('Unknown error');
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -73,12 +65,14 @@ class _ContactsListState extends State<ContactsList> {
           Navigator.of(context)
               .push(
                 MaterialPageRoute(
-                  builder: (context) => ContactForm(),
+                  builder: (context) => ContactForm(
+                    contactDao: widget.contactDao,
+                  ),
                 ),
               )
               .then((value) => setState(() {}));
         },
-        child: Icon(
+        child: const Icon(
           Icons.add,
         ),
       ),
@@ -86,11 +80,11 @@ class _ContactsListState extends State<ContactsList> {
   }
 }
 
-class _ContactItem extends StatelessWidget {
+class ContactItem extends StatelessWidget {
   final Contact contact;
   final Function onClick;
 
-  _ContactItem(
+  ContactItem(
     this.contact, {
     required this.onClick,
   });
